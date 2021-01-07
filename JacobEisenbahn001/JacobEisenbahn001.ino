@@ -7,7 +7,7 @@ const word    IR_PAUSE = 300;
 const word F_WARN = 1;
 const word F_DIESEL = 2;
 const word F_HORN = 3;
-const word F_LIGHT = 5;
+const word F_LIGHT = 0;
 
 TrackControllerInfrared tci = TrackControllerInfrared();
 
@@ -48,7 +48,12 @@ void loop() {
   tci.toggleLocoFunction(LOCO, F_HORN);
   Serial.println("Hupen");
   delay(IR_PAUSE);
-
+ 
+//Erst mal hupen
+  tci.toggleLocoFunction(LOCO, F_LIGHT);
+  Serial.println("licht an");
+  delay(IR_PAUSE);
+  
   // Dann anfahren
   Serial.print("Anfahren ");
   for (int n = 0; n < 12; n++) { // n++ ist eine Abkürzung für n=n+1
