@@ -2,6 +2,12 @@
 
 const word    LOCO  = 2;
 const word    TIME  = 2000;
+const word    IR_PAUSE = 300;
+
+const word F_WARN = 1;
+const word F_DIESEL = 2;
+const word F_HORN = 3;
+const word F_LIGHT = 5;
 
 TrackControllerInfrared tci = TrackControllerInfrared();
 
@@ -20,9 +26,9 @@ TrackControllerInfrared tci = TrackControllerInfrared();
 void setup() {
   Serial.begin(115200);
   while (!Serial);
-  
+
   tci.start();
-  
+
   Serial.print("Power Status: ");
   Serial.println(tci.getPower());
 
@@ -36,23 +42,24 @@ void setup() {
 
 void loop() {
 
-  delay(2*TIME);
+  delay(2 * TIME);
 
-//  for (int n = 0; n < 5; n++) {
-//    Serial.print(n);
-//    Serial.print(": accelerateLoco(");
-//    Serial.print(LOCO);
-//    Serial.println(")");
-//    tci.accelerateLoco(LOCO);
-//    delay(TIME);
-//  };
-//  for (int n = 0; n < 12; n++) {
-//    Serial.print(n);
-//    Serial.print(": decelerateLoco(");
-//    Serial.print(LOCO);
-//    Serial.println(")");
-//    tci.decelerateLoco(LOCO);
-//    delay(TIME);
-//  };
-//  for (;;);
+  // Erst mal hupen
+  tci.toggleLocoFunction(LOCO, F_HORN);
+  Serial.println("Hupen");
+  delay(IR_PAUSE);
+
+  // Dann anfahren
+  Serial.print("Anfahren ");
+  for (int n = 0; n < 12; n++) { // n++ ist eine Abkürzung für n=n+1
+    tci.accelerateLoco(LOCO);
+    Serial.print(n);
+    Serial.print(", ");
+    // Sicherheitshalber eine kurze Pause zwischen den Beschleunigungs-Kommandos
+    delay(IR_PAUSE);
+  }
+
+  // Das war's
+  // Bis zum reset bleib ich in der Endlosschleife
+  for (;;);
 }
