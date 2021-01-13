@@ -5,10 +5,29 @@
 #include <WebServer.h>
 #include <ESPmDNS.h>
 
+#include <U8g2lib.h>
+U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+const char COPYRIGHT_SYMBOL[] = { 0xa9, '\0' };
+
 const char *ssid = "Pfarrhaus";
 const char *password = "Bettina28101974Martin17071972";
 
+
+TrackControllerInfrared tir = TrackControllerInfrared();
+
+String command;
+int function;
+int loco = 2;
+
 WebServer server(80);
+
+void u8g2_prepare() {
+  u8g2.setFont(u8g2_font_6x10_tf);
+  u8g2.setFontRefHeightExtendedText();
+  u8g2.setDrawColor(1);
+  u8g2.setFontPosTop();
+  u8g2.setFontDirection(0);
+}
 
 String buildHTML(int status) {
   char temp[1000];
@@ -69,6 +88,21 @@ void handleNotFound() {
   server.send(404, "text/plain", message);
 }
 
+void showIP() {
+  char buf[20];
+  sprintf(buf, "IP:%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3] );
+  u8g2.clearBuffer();          // clear the internal memory
+  u8g2.drawStr(0, 10, buf);
+  u8g2.sendBuffer();
+}
+void showCmd() {
+  char buf[20];
+  sprintf(buf, "Lok: %d Cmd: %s", loco, command);
+  showIP();
+  u8g2.drawStr(0, 20, buf);
+  u8g2.sendBuffer();
+}
+
 void startServer() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
@@ -82,6 +116,8 @@ void startServer() {
   Serial.println(ssid);
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+
+  showIP();
 
   if (MDNS.begin("esp32")) {
     Serial.println("MDNS responder started");
@@ -97,15 +133,12 @@ void startServer() {
   Serial.println("HTTP server started");
 }
 
-TrackControllerInfrared tir = TrackControllerInfrared();
-
-String command;
-int function;
-int loco = 2;
-
 void setup() {
   Serial.begin(115200);
   while (!Serial);
+
+  u8g2.begin();
+  u8g2_prepare();
 
   startServer();
   tir.start();
@@ -127,6 +160,8 @@ void receiveRequest() {
   Serial.println();
   loco = server.arg("lok").toInt();
   command = server.arg("func");
+  
+  showCmd();
 }
 
 word stringToWord(String s) {
